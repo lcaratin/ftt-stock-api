@@ -74,36 +74,40 @@ function getById(_id) {
     return deferred.promise;
 }
 
-function updateStockQuantity(transactParam, oldTransact) {
-    var deferred = Q.defer();
+function updateStockQuantity(operation, transactParam, oldTransact) {
+    var deferred = Q.defer(), productId;
 
-    db.products.findById(transactParam.productId, function (err, product) {
+    if (transactParam != null && transactParam.productId != null)
+        productId = transactParam.productId;
+    else if (oldTransact != null && oldTransact.productId != null) 
+        productId = oldTransact.productId;
+
+    db.products.findById(productId, function (err, product) {
         if (err) deferred.reject(err.name + ': ' + err.message);
         
         if (product) {
-            updateStock(product);
+            updateStock(operation, product, productId);
         } else {
             deferred.reject('Transact Product not found.');
         }
     });
 
-    function updateStock(product) {
-        console.log('product service updateStockQuantity');
-        console.log(JSON.stringify(oldTransact));
+    function updateStock(operation, product, productId) {
+        let quantity =  0;
 
-        let quantity =  product.stockQuantity;
-
-        quantity = transactParam.transact ? quantity + transactParam.quantity : quantity - transactParam.quantity;
-        
-        if (oldTransact)
-            quantity = oldTransact.transact ? quantity - oldTransact.quantity : quantity + oldTransact.quantity;
+        if (operation == 'INSERT')
+            quantity = insert_calcQuantity(product, transactParam);
+        else if (operation == 'UPDATE')
+            quantity = update_calcQuantity(product, transactParam, oldTransact);
+        else if (operation == 'DELETE')
+            quantity = delete_calcQuantity(product, oldTransact);
 
         var set = {
             stockQuantity : quantity
         }
 
         db.products.update(
-            { _id: mongo.helper.toObjectID(transactParam.productId) },
+            { _id: mongo.helper.toObjectID(productId) },
             { $set: set },
             function (err, doc) {
                 if (err) deferred.reject(err.name + ': ' + err.message);
@@ -111,6 +115,25 @@ function updateStockQuantity(transactParam, oldTransact) {
                 deferred.resolve();
             }
         );
+    }
+
+    function insert_calcQuantity(product, transactParam) {
+        let quantity =  product.stockQuantity;
+        quantity = transactParam.transact ? quantity + transactParam.quantity : quantity - transactParam.quantity;
+        return quantity;
+    }
+
+    function update_calcQuantity(product, transactParam, oldTransact) {
+        let quantity =  product.stockQuantity;
+        quantity = transactParam.transact ? quantity + transactParam.quantity : quantity - transactParam.quantity;
+        quantity = oldTransact.transact ? quantity - oldTransact.quantity : quantity + oldTransact.quantity;
+        return quantity;
+    }
+
+    function delete_calcQuantity(product, oldTransact) {
+        let quantity =  product.stockQuantity;
+        quantity = oldTransact.transact ? quantity - oldTransact.quantity : quantity + oldTransact.quantity;
+        return quantity;
     }
 }
 
@@ -162,6 +185,7 @@ function update(_id, productParam) {
 
     return deferred.promise;
 }
+
 function _delete(_id) {
     var deferred = Q.defer();
 

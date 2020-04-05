@@ -4,11 +4,11 @@ var router = express.Router();
 var transactionService = require('services/transactions.service');
 var productService = require('services/products.service');
 
-router.get('/', getTransactions); //
-router.get('/:_id', getTransactionsByProduct); //
-router.post('/register', registerTransaction); //
-router.put('/:_id', updateTransaction); 
-// router.delete('/:_id', deleteProduct); //
+router.get('/', getTransactions);
+router.get('/:_id', getTransactionsByProduct);
+router.post('/register', registerTransaction);
+router.put('/:_id', updateTransaction);
+router.delete('/:_id', deleteTransaction);
 
 module.exports = router;
 
@@ -35,7 +35,7 @@ function getTransactionsByProduct(req, res) {
 function registerTransaction(req, res) {
     transactionService.create(req.body)
         .then(function () {
-            productService.updateStockQuantity(req.body);
+            productService.updateStockQuantity('INSERT', req.body);
         })
         .then(function(){
             res.sendStatus(200);
@@ -48,7 +48,7 @@ function registerTransaction(req, res) {
 function updateTransaction(req, res) {
     transactionService.update(req.params._id, req.body)
         .then(function (oldTransact) {
-            productService.updateStockQuantity(req.body, oldTransact);
+            productService.updateStockQuantity('UPDATE', req.body, oldTransact);
         })
         .then(function(){
             res.sendStatus(200);
@@ -58,28 +58,16 @@ function updateTransaction(req, res) {
         });
 }
 
-// function getById(req, res) {
-//     transactionService.getById(req.params._id)
-//         .then(function (user) {
-//             if (user) {
-//                 res.send(user);
-//             } else {
-//                 res.sendStatus(404);
-//             }
-//         })
-//         .catch(function (err) {
-//             res.status(400).send(err);
-//         });
-// }
-
-
-
-// function deleteProduct(req, res) {
-//     transactionService.delete(req.params._id)
-//         .then(function () {
-//             res.sendStatus(200);
-//         })
-//         .catch(function (err) {
-//             res.status(400).send(err);
-//         });
-// }
+function deleteTransaction(req, res) {
+    transactionService.delete(req.params._id)
+        .then(function (oldTransact) {
+            productService.updateStockQuantity('DELETE', null, oldTransact);
+        })
+        .then(function(){
+            res.sendStatus(200);
+        })
+        .catch(function (err) {
+            console.log(err);
+            res.status(400).send(err);
+        });
+}

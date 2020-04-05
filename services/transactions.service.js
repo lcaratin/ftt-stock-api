@@ -14,9 +14,9 @@ var service = {};
 service.getAll = getAll;
 service.getAllByProduct = getAllByProduct;
 service.create = create;
-// service.getById = getById;
 service.update = update;
-// service.delete = _delete;
+service.delete = _delete;
+service.deleteByProduct = deleteByProduct;
 
 module.exports = service;
 
@@ -53,28 +53,11 @@ function create(transactParam) {
             if (err) deferred.reject(err.name + ': ' + err.message);
 
             deferred.resolve();
-            //productService.updateStockQuantity(transactParam, deferred);
         }
     );
 
     return deferred.promise;
 }
-
-// function getById(_id) {
-//     var deferred = Q.defer();
-
-//     db.transactions.findById(_id, function (err, transact) {
-//         if (err) deferred.reject(err.name + ': ' + err.message);
-
-//         if (transact) {
-//             deferred.resolve(transact);
-//         } else {
-//             deferred.resolve();
-//         }
-//     });
-
-//     return deferred.promise;
-// }
 
 function update(_id, transactParam) {
     var deferred = Q.defer();
@@ -109,16 +92,43 @@ function update(_id, transactParam) {
     return deferred.promise;
 }
 
-// function _delete(_id) {
-//     var deferred = Q.defer();
+function _delete(_id) {
+    var deferred = Q.defer();
 
-//     db.transactions.remove(
-//         { _id: mongo.helper.toObjectID(_id) },
-//         function (err) {
-//             if (err) deferred.reject(err.name + ': ' + err.message);
+    db.transactions.findById(_id, function (err, oldTransact) {
+        if (err) deferred.reject(err.name + ': ' + err.message);
+        
+        if (oldTransact)
+            removeTransact(oldTransact);
+        else deferred.reject('Transact not found');
+    });
 
-//             deferred.resolve();
-//         });
+    function removeTransact(oldTransact) {
+        db.transactions.remove(
+            { _id: mongo.helper.toObjectID(_id) },
+            function (err) {
+                if (err) deferred.reject(err.name + ': ' + err.message);
+    
+                deferred.resolve(oldTransact);
+            }
+        );
+    }
 
-//     return deferred.promise;
-// }
+    return deferred.promise;
+}
+
+function deleteByProduct(_id) {
+    var deferred = Q.defer();
+
+    db.transactions.remove(
+        { productId: _id },
+        function (err) {
+            if (err) deferred.reject(err.name + ': ' + err.message);
+
+            console.log(_id);
+            deferred.resolve();
+        }
+    );
+
+    return deferred.promise;
+}

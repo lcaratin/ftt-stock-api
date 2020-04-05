@@ -2,6 +2,7 @@ var config = require('config.json');
 var express = require('express');
 var router = express.Router();
 var productService = require('services/products.service');
+var transactionService = require('services/transactions.service');
 
 router.get('/', getProducts);
 router.post('/register', registerProduct); //
@@ -57,6 +58,9 @@ function updateProduct(req, res) {
 
 function deleteProduct(req, res) {
     productService.delete(req.params._id)
+        .then(function () {
+            transactionService.deleteByProduct(req.params._id)
+        })
         .then(function () {
             res.sendStatus(200);
         })
