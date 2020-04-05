@@ -74,22 +74,29 @@ function getById(_id) {
     return deferred.promise;
 }
 
-function updateStockQuantity(transactParam) {
+function updateStockQuantity(transactParam, oldTransact) {
     var deferred = Q.defer();
 
     db.products.findById(transactParam.productId, function (err, product) {
         if (err) deferred.reject(err.name + ': ' + err.message);
-
+        
         if (product) {
-            updateStock(product)
+            updateStock(product);
         } else {
             deferred.reject('Transact Product not found.');
         }
     });
 
     function updateStock(product) {
+        console.log('product service updateStockQuantity');
+        console.log(JSON.stringify(oldTransact));
+
         let quantity =  product.stockQuantity;
+
         quantity = transactParam.transact ? quantity + transactParam.quantity : quantity - transactParam.quantity;
+        
+        if (oldTransact)
+            quantity = oldTransact.transact ? quantity - oldTransact.quantity : quantity + oldTransact.quantity;
 
         var set = {
             stockQuantity : quantity

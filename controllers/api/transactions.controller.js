@@ -4,11 +4,10 @@ var router = express.Router();
 var transactionService = require('services/transactions.service');
 var productService = require('services/products.service');
 
-router.get('/', getTransactions);
-router.get('/:_id', getTransactionsByProduct);
+router.get('/', getTransactions); //
+router.get('/:_id', getTransactionsByProduct); //
 router.post('/register', registerTransaction); //
-// router.get('/:_id', getById); //
-// router.put('/:_id', updateProduct); //
+router.put('/:_id', updateTransaction); 
 // router.delete('/:_id', deleteProduct); //
 
 module.exports = router;
@@ -46,6 +45,19 @@ function registerTransaction(req, res) {
         });
 }
 
+function updateTransaction(req, res) {
+    transactionService.update(req.params._id, req.body)
+        .then(function (oldTransact) {
+            productService.updateStockQuantity(req.body, oldTransact);
+        })
+        .then(function(){
+            res.sendStatus(200);
+        })
+        .catch(function (err) {
+            res.status(400).send(err);
+        });
+}
+
 // function getById(req, res) {
 //     transactionService.getById(req.params._id)
 //         .then(function (user) {
@@ -60,15 +72,7 @@ function registerTransaction(req, res) {
 //         });
 // }
 
-// function updateProduct(req, res) {
-//     transactionService.update(req.params._id, req.body)
-//         .then(function () {
-//             res.sendStatus(200);
-//         })
-//         .catch(function (err) {
-//             res.status(400).send(err);
-//         });
-// }
+
 
 // function deleteProduct(req, res) {
 //     transactionService.delete(req.params._id)

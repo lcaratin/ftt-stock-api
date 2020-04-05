@@ -15,7 +15,7 @@ service.getAll = getAll;
 service.getAllByProduct = getAllByProduct;
 service.create = create;
 // service.getById = getById;
-// service.update = update;
+service.update = update;
 // service.delete = _delete;
 
 module.exports = service;
@@ -76,71 +76,38 @@ function create(transactParam) {
 //     return deferred.promise;
 // }
 
-// function update(_id, transactParam) {
-//     var deferred = Q.defer();
+function update(_id, transactParam) {
+    var deferred = Q.defer();
 
-//     db.transactions.findById(_id, function (err, product) {
-//         if (err) deferred.reject(err.name + ': ' + err.message);
-//         else updateTransact();
-//     });
+    db.transactions.findById(_id, function (err, oldTransact) {
+        if (err) deferred.reject(err.name + ': ' + err.message);
+        
+        if (oldTransact)
+            updateTransact(oldTransact);
+        else deferred.reject('Transact not found');
+    });
 
-//     function updateTransact() {
-//         var set = {
-//             quantity: transactParam.quantity,
-//             transact: transactParam.transact
-//         };
+    function updateTransact(oldTransact) {
+        transactParam.productId = oldTransact.productId;
 
-//         db.transactions.update(
-//             { _id: mongo.helper.toObjectID(_id) },
-//             { $set: set },
-//             function (err, doc) {
-//                 if (err) deferred.reject(err.name + ': ' + err.message);
+        var set = {
+            quantity: transactParam.quantity,
+            transact: transactParam.transact
+        };
 
-//                 //deferred.resolve();
-//                 productService.updateStockQuantity(transactParam, deferred);
-//             }
-//         );
-//     }
+        db.transactions.update(
+            { _id: mongo.helper.toObjectID(_id) },
+            { $set: set },
+            function (err, doc) {
+                if (err) deferred.reject(err.name + ': ' + err.message);
 
-//     function updateProduct() {
-//         // fields to update
+                deferred.resolve(oldTransact);
+            }
+        );
+    }
 
-//         db.transactions.findById(_id, function (err, transact) {
-//             if (err) deferred.reject(err.name + ': ' + err.message);
-    
-//             if (transact) {
-//                 deferred.resolve(transact);
-//             } else {
-//                 deferred.resolve();
-//             }
-//         });
-
-//         var set = {
-//             name: transactParam.name,
-//             type: transactParam.type,
-//             brand: transactParam.brand,
-//             characteristic: transactParam.characteristic,
-//             color: transactParam.color,
-//             size: transactParam.size,
-//             purchaseTagPrice: transactParam.purchaseTagPrice,
-//             purchasePrice: transactParam.purchasePrice,
-//             hundredPercentPrice: transactParam.hundredPercentPrice,
-//             suggestedPrice: transactParam.suggestedPrice
-//         };
-
-//         db.transactions.update(
-//             { _id: mongo.helper.toObjectID(_id) },
-//             { $set: set },
-//             function (err, doc) {
-//                 if (err) deferred.reject(err.name + ': ' + err.message);
-
-//                 deferred.resolve();
-//             }
-//         );
-//     }
-
-//     return deferred.promise;
-// }
+    return deferred.promise;
+}
 
 // function _delete(_id) {
 //     var deferred = Q.defer();
