@@ -36,7 +36,8 @@ if (ambiente === 'development'){
 api.use('/api', expressJwt({ secret: config.secret }).unless({ path: [
     '/api/users/authenticate', 
     '/api/users/register',
-    /^\/api\/products\/.*/
+    /^\/api\/products\/.*/,
+    /^\/api\/transactions\/.*/
 ] }));
 
 //
@@ -45,6 +46,7 @@ api.use('/api', expressJwt({ secret: config.secret }).unless({ path: [
 // A cada require, o js é inicializado
 api.use('/api/users', require('./controllers/api/users.controller'));
 api.use('/api/products', require('./controllers/api/products.controller'));
+api.use('/api/transactions', require('./controllers/api/transactions.controller'));
 
 // start server API
 var serverAPI = api.listen(apiPort, function () {

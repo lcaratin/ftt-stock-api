@@ -74,6 +74,39 @@ function getById(_id) {
     return deferred.promise;
 }
 
+function updateStockQuantity(transactParam) {
+    var deferred = Q.defer();
+
+    db.products.findById(transactParam.productId, function (err, product) {
+        if (err) deferred.reject(err.name + ': ' + err.message);
+
+        if (product) {
+            updateStock(product)
+        } else {
+            deferred.reject('Transact Product not found.');
+        }
+    });
+
+    function updateStock(product) {
+        let quantity =  product.stockQuantity;
+        quantity = transactParam.transact ? quantity + transactParam.quantity : quantity - transactParam.quantity;
+
+        var set = {
+            stockQuantity : quantity
+        }
+
+        db.products.update(
+            { _id: mongo.helper.toObjectID(transactParam.productId) },
+            { $set: set },
+            function (err, doc) {
+                if (err) deferred.reject(err.name + ': ' + err.message);
+
+                deferred.resolve();
+            }
+        );
+    }
+}
+
 function update(_id, productParam) {
     var deferred = Q.defer();
 
