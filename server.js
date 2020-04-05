@@ -35,15 +35,16 @@ if (ambiente === 'development'){
 
 api.use('/api', expressJwt({ secret: config.secret }).unless({ path: [
     '/api/users/authenticate', 
-    '/api/users/register'
+    '/api/users/register',
+    /^\/api\/products\/.*/
 ] }));
 
-///^\/api\/questions\/.*/
+//
 
 // Aqui o mapemanto das rotas da aplicação. Todos esses mapeamentos fazem parte da aplicação
 // A cada require, o js é inicializado
 api.use('/api/users', require('./controllers/api/users.controller'));
-//api.use('/api/questions', require('./controllers/api/questions.controller'));
+api.use('/api/products', require('./controllers/api/products.controller'));
 
 // start server API
 var serverAPI = api.listen(apiPort, function () {
